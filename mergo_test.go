@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
 	"gopkg.in/yaml.v1"
 )
 
@@ -437,7 +438,29 @@ type structWithTimePointer struct {
 	Birth *time.Time
 }
 
+type structWithTime struct {
+	Birth time.Time
+	Val   string
+}
+
 func TestTime(t *testing.T) {
+	now := time.Now()
+	dataStruct := structWithTime{
+		Birth: now,
+	}
+	b := structWithTime{}
+	if err := Merge(&b, dataStruct); err != nil {
+		t.FailNow()
+	}
+	if b.Birth.IsZero() {
+		t.Fatalf("time.Time not merged in properly: b.Birth(%v) != dataStruct['Birth'](%v)", b.Birth, dataStruct.Birth)
+	}
+	if b.Birth != dataStruct.Birth {
+		t.Fatalf("time.Time not merged in properly: b.Birth(%v) != dataStruct['Birth'](%v)", b.Birth, dataStruct.Birth)
+	}
+}
+
+func TestTimePointer(t *testing.T) {
 	now := time.Now()
 	dataStruct := structWithTimePointer{
 		Birth: &now,

@@ -9,8 +9,18 @@
 package mergo
 
 import (
+	"fmt"
 	"reflect"
+	"time"
 )
+
+var zeroTime = time.Time{}
+
+const timePkgPath = "time.Time"
+
+func getStructPath(v reflect.Value) string {
+	return fmt.Sprintf("%s.%s", v.Type().PkgPath(), v.Type().Name())
+}
 
 // Traverses recursively both values, assigning src's fields values to dst.
 // The map argument tracks comparisons that have already been seen, which allows
@@ -34,6 +44,12 @@ func deepMerge(dst, src reflect.Value, visited map[uintptr]*visit, depth int, ov
 	}
 	switch dst.Kind() {
 	case reflect.Struct:
+		if getStructPath(dst) == timePkgPath {
+			t, _ := dst.Interface().(time.Time)
+			if t == zeroTime {
+				dst.Set(src)
+			}
+		}
 		for i, n := 0, dst.NumField(); i < n; i++ {
 			if err = deepMerge(dst.Field(i), src.Field(i), visited, depth+1, overwrite); err != nil {
 				return
