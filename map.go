@@ -89,7 +89,8 @@ func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, over
 				continue
 			}
 			if srcKind == dstKind {
-				if err = deepMerge(dstElement, srcElement, visited, depth+1, overwrite); err != nil {
+				if err = deepMerge(
+					dstElement, srcElement, visited, depth+1, overwrite, noCustomMergeFunc); err != nil {
 					return
 				}
 			} else {
@@ -138,7 +139,7 @@ func _map(dst, src interface{}, overwrite bool) error {
 	// To be friction-less, we redirect equal-type arguments
 	// to deepMerge. Only because arguments can be anything.
 	if vSrc.Kind() == vDst.Kind() {
-		return deepMerge(vDst, vSrc, make(map[uintptr]*visit), 0, overwrite)
+		return deepMerge(vDst, vSrc, make(map[uintptr]*visit), 0, overwrite, noCustomMergeFunc)
 	}
 	switch vSrc.Kind() {
 	case reflect.Struct:

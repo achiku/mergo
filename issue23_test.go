@@ -18,7 +18,7 @@ func TestIssue23MergeWithOverwrite(t *testing.T) {
 	src := document{
 		&expected,
 	}
-	if err := MergeWithOverwrite(&dst, src); err != nil {
+	if err := MergeWithOverwrite(&dst, src, noCustomMergeFunc); err != nil {
 		t.Errorf("Error while merging %s", err)
 	}
 	if dst.Created != src.Created {

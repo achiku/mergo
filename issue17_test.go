@@ -19,7 +19,7 @@ func TestIssue17MergeWithOverwrite(t *testing.T) {
 	if err := json.Unmarshal([]byte(request), &something); err != nil {
 		t.Errorf("Error while Unmarshalling maprequest %s", err)
 	}
-	if err := MergeWithOverwrite(&something, maprequest); err != nil {
+	if err := MergeWithOverwrite(&something, maprequest, noCustomMergeFunc); err != nil {
 		t.Errorf("Error while merging %s", err)
 	}
 }

@@ -6,6 +6,7 @@
 package mergo
 
 import (
+	"fmt"
 	"io/ioutil"
 	"reflect"
 	"testing"
@@ -123,8 +124,9 @@ func TestComplexStructWithOverwrite(t *testing.T) {
 	a := complexTest{simpleTest{1}, 1, "do-not-overwrite-with-empty-value"}
 	b := complexTest{simpleTest{42}, 2, ""}
 
+	customMerger := func(dst, src reflect.Value) {}
 	expect := complexTest{simpleTest{42}, 1, "do-not-overwrite-with-empty-value"}
-	if err := MergeWithOverwrite(&a, b); err != nil {
+	if err := MergeWithOverwrite(&a, b, customMerger); err != nil {
 		t.FailNow()
 	}
 
@@ -265,7 +267,8 @@ func TestMapsWithOverwrite(t *testing.T) {
 		"e": {14},
 	}
 
-	if err := MergeWithOverwrite(&m, n); err != nil {
+	customMerger := func(dst, src reflect.Value) {}
+	if err := MergeWithOverwrite(&m, n, customMerger); err != nil {
 		t.Fatalf(err.Error())
 	}
 
@@ -443,13 +446,27 @@ type structWithTime struct {
 	Val   string
 }
 
+func getStructPath(v reflect.Value) string {
+	return fmt.Sprintf("%s.%s", v.Type().PkgPath(), v.Type().Name())
+}
+
+var zeroTime = time.Time{}
+
 func TestTime(t *testing.T) {
 	now := time.Now()
 	dataStruct := structWithTime{
 		Birth: now,
 	}
+	myMergeFunc := func(dst, src reflect.Value) {
+		if getStructPath(dst) == "time.Time" {
+			t, _ := dst.Interface().(time.Time)
+			if t == zeroTime {
+				dst.Set(src)
+			}
+		}
+	}
 	b := structWithTime{}
-	if err := Merge(&b, dataStruct); err != nil {
+	if err := MergeWithOverwrite(&b, dataStruct, myMergeFunc); err != nil {
 		t.FailNow()
 	}
 	if b.Birth.IsZero() {
